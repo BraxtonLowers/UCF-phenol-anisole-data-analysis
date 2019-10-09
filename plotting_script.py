@@ -13,7 +13,7 @@ from sklearn.metrics import r2_score
 
 
 
-def create_plot(x_corrected, y_corrected, x_ground_truth, y_ground_truth, r2_train, r2_test, analyte,
+def create_plot(x_corrected, y_corrected, x_ground_truth, y_ground_truth, r2_train, r2_test, analyte, peak,
                 ground_truth_uncertainty, corrected_uncertainty, is_linear, regression):
     """
 Creates a plot with corrected datapoints, ground truth datapoints, a best fit line, and a fully formatted legend
@@ -24,6 +24,7 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     :param float r2_train: r squared score for train values with best fit line
     :param float r2_test: r squared score for test values with best fit line
     :param str analyte: name of analyte
+    :param str peak: name of peak plotted
     :param numpy.Series ground_truth_uncertainty: Series with x uncertainty for ground truth
     :param numpy.Series corrected_uncertainty: Series with x uncertainty for corrected values
     :param bool is_linear: is linear or logarithmic
@@ -42,7 +43,7 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     pyplot.scatter(x=x_corrected, y=y_corrected, c='blue', marker='v', label=corrected_axis_label)
     ground_truth_axis_label = 'referenced to TMS\nR$^2$: ' + r2_test
     pyplot.scatter(x=x_ground_truth, y=y_ground_truth, c='orange', marker='^', label=ground_truth_axis_label)
-    title_str = analyte + ' in CDCl$_3$: para peak. Molality vs chemical shift'
+    title_str = analyte + ' in CDCl$_3$: ' + peak + ' peak. Molality vs chemical shift'
     pyplot.title(title_str, fontdict={'fontsize': 24})
     pyplot.xlabel('Molality (mol/kg)', fontdict={'fontsize': 16})
     pyplot.ylabel('Chemical shift (ppm)', fontdict={'fontsize': 16})

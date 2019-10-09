@@ -10,6 +10,7 @@ from matplotlib import pyplot
 import seaborn as sns
 from sklearn import linear_model
 from sklearn.metrics import r2_score
+import json
 
 
 
@@ -55,8 +56,18 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     pyplot.show()
 
 
-# Open dataset as a pandas dataframe
+# Loads corrections to reference data
+correctionsFile = './path to corrections output'
+with open(correctionsFile) as json_data:
+    corrections = json.load(json_data)
+# Open dataset as a pandas dataframe and prepare an averaged dataset
 filename = r'C:\Users\Braxton Lowers\Desktop\Raw spectral data\allNMRpeaksWithUncertainty.csv'
 dataset = pd.read_csv(filename, header=0)
 grouped_dataset = dataset.groupby(['analyte', 'solvent', 'molality'])
 averaged_dataset = grouped_dataset.mean().reset_index()
+# Iterates over peaks and analytes and perform linear correction on each
+analyteList = ['phenol', 'anisole', 'thiophenol', 'thioanisole']
+for analyte_to_view in analyteList:
+    peakList = ['ipso', 'ortho', 'meta', 'para']
+    for peak_to_view in peakList:
+        corrected_dataset = averaged_dataset[peak_to_view] + (averaged_dataset.molality * corrections[analyte_to_view]['slope'] - corrections[analyte_to_view]['intercept'])

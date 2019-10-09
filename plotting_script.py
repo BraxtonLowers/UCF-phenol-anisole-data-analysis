@@ -70,4 +70,18 @@ analyteList = ['phenol', 'anisole', 'thiophenol', 'thioanisole']
 for analyte_to_view in analyteList:
     peakList = ['ipso', 'ortho', 'meta', 'para']
     for peak_to_view in peakList:
-        corrected_dataset = averaged_dataset[peak_to_view] + (averaged_dataset.molality * corrections[analyte_to_view]['slope'] - corrections[analyte_to_view]['intercept'])
+        corrected_chemical_shift = averaged_dataset[peak_to_view] + (averaged_dataset.molality *
+                                                                     corrections[analyte_to_view]['slope'] -
+                                                                     corrections[analyte_to_view]['intercept'])
+        # Select x and y data
+        correctedX = averaged_dataset[(averaged_dataset['analyte'] == analyte_to_view) &
+                                       (averaged_dataset['solvent'] == 'cdcl3')]['molality']
+        correctedY = corrected_chemical_shift
+        # Prepare a linear regression model and fit it to the corrected data
+        regression = linear_model.LinearRegression()
+        regression.fit(correctedX, correctedY)
+        # Plot data
+        # Contains dummy data
+        create_plot(x_corrected=correctedX, y_corrected=correctedY, x_ground_truth=[[0]], y_ground_truth=[[0]],
+                    r2_train=0, r2_test=0, analyte=analyte_to_view, peak=peak_to_view, ground_truth_uncertainty=[[1]],
+                    corrected_uncertainty=averaged_dataset['uncertainty'], is_linear=True, regression=regression)

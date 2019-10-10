@@ -34,7 +34,7 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
         best_fit_line_y = regression.predict(np.log(best_fit_line_x))
         r2_train = r2_score(y_corrected, np.log(x_corrected) * corrections[analyte_to_view]['slope'] +
                             corrections[analyte_to_view]['intercept'])
-        r2_test = r2_score(y_ground_truth, np.log(x_corrected) * corrections[analyte_to_view]['slope'] +
+        r2_test = r2_score(y_ground_truth, np.log(x_ground_truth) * corrections[analyte_to_view]['slope'] +
                            corrections[analyte_to_view]['intercept'])
         equation_of_line = 'best fit line: f(x) = ' + str(regression.coef_[0][0]) + '*ln(x) + ' + \
                            str(regression.intercept_[0])
@@ -68,7 +68,7 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
 # correctionsFile = '.\path to corrections output'
 # with open(correctionsFile) as json_data:
 #     corrections = json.load(json_data)
-json_data = '{"phenol":{"slope":0.02323674138873531, "intercept":0.21047156916347376, "isLinear":"False"}}'
+json_data = '{"phenol":{"slope":0.02323674138873531, "intercept":0.21047156916347376, "isLinear":false}}'
 corrections = json.loads(json_data)
 print(corrections)
 # Open uncorrected dataset as a pandas dataframe and prepare an averaged dataset
@@ -107,4 +107,4 @@ for analyte_to_view in analyteList:
         # Contains dummy data
         create_plot(x_corrected=correctedX, y_corrected=correctedY, x_ground_truth=groundX, y_ground_truth=groundY,
                     analyte=analyte_to_view, peak=peak_to_view, ground_truth_uncertainty=groundUncertain,
-                    corrected_uncertainty=correctedUncertain, is_linear=True, regression=regression)
+                    corrected_uncertainty=correctedUncertain, is_linear=is_linear, regression=regression)

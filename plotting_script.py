@@ -66,18 +66,17 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
 
 
 # Loads corrections to reference data
+# TODO uncomment when ready to remove dummy json data
 ################################################## commented out for dummy test purposes
 # correctionsFile = '.\path to corrections output'
 # with open(correctionsFile) as json_data:
 #     corrections = json.load(json_data)
+# DUMMY DATA
 json_data = '{"phenol":{"slope":0.02323674138873531, "intercept":0.21047156916347376, "isLinear":false, "logFactor":0.1078063, "logIntercept":120.9760168}}'
 corrections = json.loads(json_data)
-print(corrections)
 # Open uncorrected dataset as a pandas dataframe and prepare an averaged dataset
 filename = r'C:\Users\Braxton Lowers\Desktop\Raw spectral data\allNMRpeaksWithUncertainty.csv'
 dataset = pd.read_csv(filename, header=0)
-# TODO needs a better strategy manage NaN values
-dataset = dataset.dropna()
 grouped_dataset = dataset.groupby(['analyte', 'solvent', 'molality'])
 averaged_dataset = grouped_dataset.mean().reset_index()
 # Open ground truth dataset as a pandas dataframe
@@ -88,25 +87,30 @@ analyteList = ['phenol', 'anisole', 'thiophenol', 'thioanisole']
 for analyte_to_view in analyteList:
     peakList = ['ipso', 'ortho', 'meta', 'para']
     for peak_to_view in peakList:
-        averaged_dataset['corrected'] = averaged_dataset[peak_to_view] + (averaged_dataset.molality *
+        activeDataset = averaged_dataset
+        # Handles NaN values by excluding them only if they are in the plot to be viewed
+        if averaged_dataset[(averaged_dataset['analyte'] == analyte_to_view) &
+                            (averaged_dataset['solvent'] == 'cdcl3')].isna() is True:
+            activeDataset.dropna()
+        # Performs linear correction on data
+        activeDataset['corrected'] = activeDataset[peak_to_view] + (activeDataset.molality *
                                                                      corrections[analyte_to_view]['slope'] -
                                                                      corrections[analyte_to_view]['intercept'])
-        # Prepare data for plotting
-        correctedX = averaged_dataset[(averaged_dataset['analyte'] == analyte_to_view) &
-                                       (averaged_dataset['solvent'] == 'cdcl3')]['molality']
-        correctedY = averaged_dataset[(averaged_dataset['analyte'] == analyte_to_view) &
-                                      (averaged_dataset['solvent'] == 'cdcl3')]['corrected']
+        # Prepare dataframes for plotting
+        correctedX = activeDataset[(activeDataset['analyte'] == analyte_to_view) &
+                                       (activeDataset['solvent'] == 'cdcl3')]['molality']
+        correctedY = activeDataset[(activeDataset['analyte'] == analyte_to_view) &
+                                      (activeDataset['solvent'] == 'cdcl3')]['corrected']
         groundX = TMS_referenced_data[TMS_referenced_data['analyte'] == analyte_to_view]['molality']
         groundY = TMS_referenced_data[TMS_referenced_data['analyte'] == analyte_to_view][peak_to_view]
         groundUncertain = TMS_referenced_data[TMS_referenced_data['analyte'] == analyte_to_view]['uncertain']
-        correctedUncertain = averaged_dataset[(averaged_dataset['analyte'] == analyte_to_view) &
-                                              (averaged_dataset['solvent'] == 'cdcl3')]['molaluncertainty']
+        correctedUncertain = activeDataset[(activeDataset['analyte'] == analyte_to_view) &
+                                              (activeDataset['solvent'] == 'cdcl3')]['molaluncertainty']
         # Prepare a linear regression model and fit it to the corrected data
         regression = linear_model.LinearRegression()
-        regression.fit(np.array(correctedX).reshape(-1,1), np.array(correctedY).reshape(-1,1))
-        is_linear = corrections[analyte_to_view]['isLinear']
+        regression.fit(np.array(correctedX).reshape(-1, 1), np.array(correctedY).reshape(-1, 1))
         # Plot data
-        # Contains dummy data
         create_plot(x_corrected=correctedX, y_corrected=correctedY, x_ground_truth=groundX, y_ground_truth=groundY,
                     analyte=analyte_to_view, peak=peak_to_view, ground_truth_uncertainty=groundUncertain,
-                    corrected_uncertainty=correctedUncertain, is_linear=is_linear, regression=regression)
+                    corrected_uncertainty=correctedUncertain, is_linear=corrections[analyte_to_view]['isLinear'],
+                    regression=regression)

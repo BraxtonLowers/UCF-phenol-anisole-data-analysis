@@ -29,6 +29,7 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     :param numpy.Series corrected_uncertainty: Series with x uncertainty for corrected values
     :param bool is_linear: is linear or logarithmic
     :param linear_model.LinearRegression regression: LinearRegression fitted to train values
+    :return table_row: pandas dataframe with row of peaks, best fit line, r2_train, and r2_test
     """
     best_fit_line_x = np.arange(x_corrected.iloc[0], x_corrected.iloc[-1], 0.1).reshape(-1,1)
     if is_linear is False:
@@ -63,6 +64,11 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     pyplot.errorbar(x=x_corrected, y=y_corrected, xerr=corrected_uncertainty, capsize=3, color='black',
                     linestyle='None')
     pyplot.show()
+    # Create a row of output data
+    table_row = pd.DataFrame(data=[[peak_to_view, equation_of_line, r2_train, r2_test]],
+                             columns=['peak', 'best fit line', 'R^2 of corrected data (precision)',
+                                      'R^2 of ground truth (accuracy)'])
+    return table_row
 
 
 # Loads corrections to reference data
@@ -82,6 +88,9 @@ averaged_dataset = grouped_dataset.mean().reset_index()
 # Open ground truth dataset as a pandas dataframe
 TMSfilename = r'C:\Users\Braxton Lowers\Desktop\Raw spectral data\TMS standardized - uncertainties.csv'
 TMS_referenced_data = pd.read_csv(TMSfilename, header=0)
+# Create output table
+outputTable = pd.DataFrame(
+        columns=['peak', 'best fit line', 'R^2 of corrected data (precision)', 'R^2 of ground truth (accuracy)'])
 # Iterates over peaks and analytes and perform linear correction on each
 analyteList = ['phenol', 'anisole', 'thiophenol', 'thioanisole']
 for analyte_to_view in analyteList:
@@ -110,7 +119,11 @@ for analyte_to_view in analyteList:
         regression = linear_model.LinearRegression()
         regression.fit(np.array(correctedX).reshape(-1, 1), np.array(correctedY).reshape(-1, 1))
         # Plot data
-        create_plot(x_corrected=correctedX, y_corrected=correctedY, x_ground_truth=groundX, y_ground_truth=groundY,
-                    analyte=analyte_to_view, peak=peak_to_view, ground_truth_uncertainty=groundUncertain,
-                    corrected_uncertainty=correctedUncertain, is_linear=corrections[analyte_to_view]['isLinear'],
-                    regression=regression)
+        a_table_row = create_plot(x_corrected=correctedX, y_corrected=correctedY, x_ground_truth=groundX,
+                                  y_ground_truth=groundY, analyte=analyte_to_view, peak=peak_to_view,
+                                  ground_truth_uncertainty=groundUncertain, corrected_uncertainty=correctedUncertain,
+                                  is_linear=corrections[analyte_to_view]['isLinear'], regression=regression)
+        # Appends a row of output r2 results to the output table
+        outputTable = pd.concat([outputTable, a_table_row], axis=0)
+    # Save table in a .csv format after each analyte
+    print(outputTable)

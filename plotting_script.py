@@ -14,6 +14,7 @@ import json
 
 sns.set()
 
+
 def create_plot(x_corrected, y_corrected, x_ground_truth, y_ground_truth, analyte, peak,
                 ground_truth_uncertainty, corrected_uncertainty, is_linear, regression):
     """

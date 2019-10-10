@@ -29,7 +29,7 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     :param bool is_linear: is linear or logarithmic
     :param linear_model.LinearRegression regression: LinearRegression fitted to train values
     """
-    best_fit_line_x = np.arange(x_corrected[0], x_corrected.iloc[-1], 0.1).reshape(-1,1)
+    best_fit_line_x = np.arange(x_corrected.iloc[0], x_corrected.iloc[-1], 0.1).reshape(-1,1)
     if is_linear is False:
         best_fit_line_y = regression.predict(np.log(best_fit_line_x))
         r2_train = r2_score(y_corrected, np.log(x_corrected) * corrections[analyte_to_view]['slope'] +
@@ -40,14 +40,16 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
                            str(regression.intercept_[0])
     else:
         best_fit_line_y = regression.predict(best_fit_line_x)
-        r2_train = r2_score(y_corrected, regression.predict(x_corrected))
-        r2_test = r2_score(y_ground_truth, regression.predict(x_ground_truth))
+        r2_train = r2_score(np.array(y_corrected).reshape(-1,1),
+                            regression.predict(np.array(x_corrected).reshape(-1, 1)))
+        r2_test = r2_score(np.array(y_ground_truth).reshape(-1,1),
+                           regression.predict(np.array(x_ground_truth).reshape(-1, 1)))
         equation_of_line = 'best fit line: f(x) = ' + str(regression.coef_[0][0]) + 'x + ' + str(regression.intercept_[0])
     best_fit_line = pyplot.plot(best_fit_line_x, best_fit_line_y, ':', color='black',
                                 label=equation_of_line)
-    corrected_axis_label = 'corrected assuming linear CDCl$_3$ concentration dependence\nR$^2$: ' + r2_train
+    corrected_axis_label = 'corrected assuming linear CDCl$_3$ concentration dependence\nR$^2$: ' + str(r2_train)
     pyplot.scatter(x=x_corrected, y=y_corrected, c='blue', marker='v', label=corrected_axis_label)
-    ground_truth_axis_label = 'referenced to TMS\nR$^2$: ' + r2_test
+    ground_truth_axis_label = 'referenced to TMS\nR$^2$: ' + str(r2_test)
     pyplot.scatter(x=x_ground_truth, y=y_ground_truth, c='orange', marker='^', label=ground_truth_axis_label)
     title_str = analyte + ' in CDCl$_3$: ' + peak + ' peak. Molality vs chemical shift'
     pyplot.title(title_str, fontdict={'fontsize': 24})
@@ -95,6 +97,8 @@ for analyte_to_view in analyteList:
         groundX = TMS_referenced_data[TMS_referenced_data['analyte'] == analyte_to_view]['molality']
         groundY = TMS_referenced_data[TMS_referenced_data['analyte'] == analyte_to_view][peak_to_view]
         groundUncertain = TMS_referenced_data[TMS_referenced_data['analyte'] == analyte_to_view]['uncertain']
+        correctedUncertain = averaged_dataset[(averaged_dataset['analyte'] == analyte_to_view) &
+                                              (averaged_dataset['solvent'] == 'cdcl3')]['molaluncertainty']
         # Prepare a linear regression model and fit it to the corrected data
         regression = linear_model.LinearRegression()
         regression.fit(np.array(correctedX).reshape(-1,1), np.array(correctedY).reshape(-1,1))
@@ -103,4 +107,4 @@ for analyte_to_view in analyteList:
         # Contains dummy data
         create_plot(x_corrected=correctedX, y_corrected=correctedY, x_ground_truth=groundX, y_ground_truth=groundY,
                     analyte=analyte_to_view, peak=peak_to_view, ground_truth_uncertainty=groundUncertain,
-                    corrected_uncertainty=averaged_dataset['molaluncertainty'], is_linear=True, regression=regression)
+                    corrected_uncertainty=correctedUncertain, is_linear=True, regression=regression)

@@ -14,7 +14,7 @@ import json
 
 
 
-def create_plot(x_corrected, y_corrected, x_ground_truth, y_ground_truth, r2_train, r2_test, analyte, peak,
+def create_plot(x_corrected, y_corrected, x_ground_truth, y_ground_truth, analyte, peak,
                 ground_truth_uncertainty, corrected_uncertainty, is_linear, regression):
     """
 Creates a plot with corrected datapoints, ground truth datapoints, a best fit line, and a fully formatted legend
@@ -22,8 +22,6 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     :param numpy.Series y_corrected: Series with train y values
     :param numpy.Series x_ground_truth: Series with test x values
     :param numpy.Series y_ground_truth: Series with test y values
-    :param float r2_train: r squared score for train values with best fit line
-    :param float r2_test: r squared score for test values with best fit line
     :param str analyte: name of analyte
     :param str peak: name of peak plotted
     :param numpy.Series ground_truth_uncertainty: Series with x uncertainty for ground truth
@@ -31,12 +29,19 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     :param bool is_linear: is linear or logarithmic
     :param linear_model.LinearRegression regression: LinearRegression fitted to train values
     """
-    best_fit_line_x = np.arange(x_corrected[0], x_corrected[-1], 0.1).reshape(-1,1)
+    best_fit_line_x = np.arange(x_corrected[0], x_corrected.iloc[-1], 0.1).reshape(-1,1)
     if is_linear is False:
         best_fit_line_y = regression.predict(np.log(best_fit_line_x))
-        equation_of_line = 'best fit line: f(x) = ' + str(regression.coef_[0][0]) + '*ln(x) + ' + str(regression.intercept_[0])
+        r2_train = r2_score(y_corrected, np.log(x_corrected) * corrections[analyte_to_view]['slope'] +
+                            corrections[analyte_to_view]['intercept'])
+        r2_test = r2_score(y_ground_truth, np.log(x_corrected) * corrections[analyte_to_view]['slope'] +
+                           corrections[analyte_to_view]['intercept'])
+        equation_of_line = 'best fit line: f(x) = ' + str(regression.coef_[0][0]) + '*ln(x) + ' + \
+                           str(regression.intercept_[0])
     else:
         best_fit_line_y = regression.predict(best_fit_line_x)
+        r2_train = r2_score(y_corrected, regression.predict(x_corrected))
+        r2_test = r2_score(y_ground_truth, regression.predict(x_ground_truth))
         equation_of_line = 'best fit line: f(x) = ' + str(regression.coef_[0][0]) + 'x + ' + str(regression.intercept_[0])
     best_fit_line = pyplot.plot(best_fit_line_x, best_fit_line_y, ':', color='black',
                                 label=equation_of_line)
@@ -57,31 +62,45 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
 
 
 # Loads corrections to reference data
-correctionsFile = './path to corrections output'
-with open(correctionsFile) as json_data:
-    corrections = json.load(json_data)
-# Open dataset as a pandas dataframe and prepare an averaged dataset
+################################################## commented out for dummy test purposes
+# correctionsFile = '.\path to corrections output'
+# with open(correctionsFile) as json_data:
+#     corrections = json.load(json_data)
+json_data = '{"phenol":{"slope":0.02323674138873531, "intercept":0.21047156916347376, "isLinear":"False"}}'
+corrections = json.loads(json_data)
+print(corrections)
+# Open uncorrected dataset as a pandas dataframe and prepare an averaged dataset
 filename = r'C:\Users\Braxton Lowers\Desktop\Raw spectral data\allNMRpeaksWithUncertainty.csv'
 dataset = pd.read_csv(filename, header=0)
+# TODO needs a better strategy manage NaN values
+dataset = dataset.dropna()
 grouped_dataset = dataset.groupby(['analyte', 'solvent', 'molality'])
 averaged_dataset = grouped_dataset.mean().reset_index()
+# Open ground truth dataset as a pandas dataframe
+TMSfilename = r'C:\Users\Braxton Lowers\Desktop\Raw spectral data\TMS standardized - uncertainties.csv'
+TMS_referenced_data = pd.read_csv(TMSfilename, header=0)
 # Iterates over peaks and analytes and perform linear correction on each
 analyteList = ['phenol', 'anisole', 'thiophenol', 'thioanisole']
 for analyte_to_view in analyteList:
     peakList = ['ipso', 'ortho', 'meta', 'para']
     for peak_to_view in peakList:
-        corrected_chemical_shift = averaged_dataset[peak_to_view] + (averaged_dataset.molality *
+        averaged_dataset['corrected'] = averaged_dataset[peak_to_view] + (averaged_dataset.molality *
                                                                      corrections[analyte_to_view]['slope'] -
                                                                      corrections[analyte_to_view]['intercept'])
-        # Select x and y data
+        # Prepare data for plotting
         correctedX = averaged_dataset[(averaged_dataset['analyte'] == analyte_to_view) &
                                        (averaged_dataset['solvent'] == 'cdcl3')]['molality']
-        correctedY = corrected_chemical_shift
+        correctedY = averaged_dataset[(averaged_dataset['analyte'] == analyte_to_view) &
+                                      (averaged_dataset['solvent'] == 'cdcl3')]['corrected']
+        groundX = TMS_referenced_data[TMS_referenced_data['analyte'] == analyte_to_view]['molality']
+        groundY = TMS_referenced_data[TMS_referenced_data['analyte'] == analyte_to_view][peak_to_view]
+        groundUncertain = TMS_referenced_data[TMS_referenced_data['analyte'] == analyte_to_view]['uncertain']
         # Prepare a linear regression model and fit it to the corrected data
         regression = linear_model.LinearRegression()
-        regression.fit(correctedX, correctedY)
+        regression.fit(np.array(correctedX).reshape(-1,1), np.array(correctedY).reshape(-1,1))
+        is_linear = corrections[analyte_to_view]['isLinear']
         # Plot data
         # Contains dummy data
-        create_plot(x_corrected=correctedX, y_corrected=correctedY, x_ground_truth=[[0]], y_ground_truth=[[0]],
-                    r2_train=0, r2_test=0, analyte=analyte_to_view, peak=peak_to_view, ground_truth_uncertainty=[[1]],
-                    corrected_uncertainty=averaged_dataset['uncertainty'], is_linear=True, regression=regression)
+        create_plot(x_corrected=correctedX, y_corrected=correctedY, x_ground_truth=groundX, y_ground_truth=groundY,
+                    analyte=analyte_to_view, peak=peak_to_view, ground_truth_uncertainty=groundUncertain,
+                    corrected_uncertainty=averaged_dataset['molaluncertainty'], is_linear=True, regression=regression)

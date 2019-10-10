@@ -31,11 +31,12 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     """
     best_fit_line_x = np.arange(x_corrected.iloc[0], x_corrected.iloc[-1], 0.1).reshape(-1,1)
     if is_linear is False:
-        best_fit_line_y = regression.predict(np.log(best_fit_line_x))
-        r2_train = r2_score(y_corrected, np.log(x_corrected) * corrections[analyte_to_view]['slope'] +
-                            corrections[analyte_to_view]['intercept'])
-        r2_test = r2_score(y_ground_truth, np.log(x_ground_truth) * corrections[analyte_to_view]['slope'] +
-                           corrections[analyte_to_view]['intercept'])
+        best_fit_line_y = np.log(best_fit_line_x) * corrections[analyte_to_view]['logFactor'] + \
+                          corrections[analyte_to_view]['logIntercept']
+        r2_train = r2_score(y_corrected, np.log(x_corrected) * corrections[analyte_to_view]['logFactor'] +
+                            corrections[analyte_to_view]['logIntercept'])
+        r2_test = r2_score(y_ground_truth, np.log(x_ground_truth) * corrections[analyte_to_view]['logFactor'] +
+                           corrections[analyte_to_view]['logIntercept'])
         equation_of_line = 'best fit line: f(x) = ' + str(regression.coef_[0][0]) + '*ln(x) + ' + \
                            str(regression.intercept_[0])
     else:
@@ -68,7 +69,7 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
 # correctionsFile = '.\path to corrections output'
 # with open(correctionsFile) as json_data:
 #     corrections = json.load(json_data)
-json_data = '{"phenol":{"slope":0.02323674138873531, "intercept":0.21047156916347376, "isLinear":false}}'
+json_data = '{"phenol":{"slope":0.02323674138873531, "intercept":0.21047156916347376, "isLinear":false, "logFactor":0.1078063, "logIntercept":120.9760168}}'
 corrections = json.loads(json_data)
 print(corrections)
 # Open uncorrected dataset as a pandas dataframe and prepare an averaged dataset

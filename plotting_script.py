@@ -74,13 +74,12 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
 # Loads corrections to reference data
 # TODO uncomment when ready to remove dummy json data
 ################################################## commented out for dummy test purposes
-# correctionsFile = '.\path to corrections output'
-# with open(correctionsFile) as json_data:
-#     corrections = json.load(json_data)
-# DUMMY DATA
-json_data = '{"phenol":{"slope":0.02323674138873531, "intercept":0.21047156916347376, "isLinear":false, "logFactor":0.1078063, "logIntercept":120.9760168}}'
-corrections = json.loads(json_data)
+correctionsFile = '.\corrections'
+with open(correctionsFile) as json_data:
+    jsonstring = json_data.read()
+    corrections = json.loads(jsonstring)
 # Open uncorrected dataset as a pandas dataframe and prepare an averaged dataset
+print(corrections)
 filename = r'C:\Users\Braxton Lowers\Desktop\Raw spectral data\allNMRpeaksWithUncertainty.csv'
 dataset = pd.read_csv(filename, header=0)
 grouped_dataset = dataset.groupby(['analyte', 'solvent', 'molality'])

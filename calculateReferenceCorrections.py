@@ -26,8 +26,11 @@ for analyte in analyte_list:
     print(77.23 - linear_regression.intercept_[0])
     # Calculate intercept correction
     interceptCorrection = 77.23 - linear_regression.intercept_[0]
-    # TODO correct linear and log
-    isLinear = False
+    if analyte == 'phenol':
+        isLinear = True
+    else:
+        isLinear = False
+    # Add log factors manually
     logFactor = None
     logIntercept = None
     # Create corrections dictionary

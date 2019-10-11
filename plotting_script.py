@@ -33,12 +33,11 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
     """
     best_fit_line_x = np.arange(x_corrected.iloc[0], x_corrected.iloc[-1], 0.1).reshape(-1,1)
     if is_linear is False:
-        best_fit_line_y = np.log(best_fit_line_x) * corrections[analyte_to_view]['logFactor'] + \
-                          corrections[analyte_to_view]['logIntercept']
-        r2_train = r2_score(y_corrected, np.log(x_corrected) * corrections[analyte_to_view]['logFactor'] +
-                            corrections[analyte_to_view]['logIntercept'])
-        r2_test = r2_score(y_ground_truth, np.log(x_ground_truth) * corrections[analyte_to_view]['logFactor'] +
-                           corrections[analyte_to_view]['logIntercept'])
+        log_factor = corrections[analyte_to_view]['logbypeak'][peak]['logFactor']
+        log_intercept = corrections[analyte_to_view]['logbypeak'][peak]['logIntercept']
+        best_fit_line_y = np.log(best_fit_line_x) * log_factor + log_intercept
+        r2_train = r2_score(y_corrected, np.log(x_corrected) * log_factor + log_intercept)
+        r2_test = r2_score(y_ground_truth, np.log(x_ground_truth) * log_factor + log_intercept)
         equation_of_line = 'best fit line: f(x) = ' + str(regression.coef_[0][0]) + '*ln(x) + ' + \
                            str(regression.intercept_[0])
     else:

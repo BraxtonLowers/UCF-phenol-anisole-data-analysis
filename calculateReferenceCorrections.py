@@ -26,7 +26,6 @@ for analyte in analyte_list:
     interceptCorrection = 77.23 - linear_regression.intercept_[0]
     if analyte == 'phenol':
         isLinear = False
-        # TODO insert log corrections here in an if-else chain
     else:
         isLinear = True
     # Add log factors manually
@@ -35,6 +34,15 @@ for analyte in analyte_list:
     # Create corrections dictionary
     json_data[analyte] = {'slope':float(linear_regression.coef_[0][0]), 'intercept': float(interceptCorrection),
                           'isLinear': isLinear, 'logFactor': logFactor, 'logIntercept': logIntercept}
+# Manually input json data for phenol
+json_data['phenol']['logbypeak'] = [{'ipso':
+                                         {'logFactor': -0.16671387, 'logIntercept': 155.11514},
+                                     'ortho':
+                                         {'logFactor': 0.0584516, 'logIntercept': 115.387},
+                                     'meta':
+                                         {'logFactor': 0.04684, 'logIntercept': 129.7449115},
+                                     'para':
+                                         {'logFactor': 0.1078063, 'logIntercept': 120.9760168}}]
 # Convert corrections dictionary to json format for saving
 outputJson = json.dumps(json_data)
 # Save calculated corrections as output file

@@ -21,8 +21,6 @@ for analyte in analyte_list:
     # Perform linear regression
     linear_regression = linear_model.LinearRegression()
     linear_regression.fit(solvent_concentration, solvent_shift)
-    #FIXME
-    print(analyte + ' - ' + str(linear_regression.coef_[0][0])) + ' ppm/molal | intercept: ' + str(linear_regression.intercept_[0])
     print(77.23 - linear_regression.intercept_[0])
     # Calculate intercept correction
     interceptCorrection = 77.23 - linear_regression.intercept_[0]
@@ -34,10 +32,10 @@ for analyte in analyte_list:
     logFactor = None
     logIntercept = None
     # Create corrections dictionary
-    json_data[analyte] = {'slope':linear_regression.coef_[0][0], 'intercept': interceptCorrection,
+    json_data[analyte] = {'slope':str(linear_regression.coef_[0][0]), 'intercept': str(interceptCorrection),
                           'isLinear': isLinear, 'logFactor': logFactor, 'logIntercept': logIntercept}
 # Convert corrections dictionary to json format for saving
-outputJson = json.loads(json_data)
+outputJson = json.dumps(json_data)
 # Save calculated corrections as output file
 with open(r'.\corrections', 'w') as correctionsFile:
     correctionsFile.write(outputJson)

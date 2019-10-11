@@ -28,11 +28,17 @@ plot.set_title('Range of chemical shift in ppm. Note that concentrations are NOT
 pyplot.xlabel('ppm', fontdict={'size':16})
 pyplot.ylabel('Analyte', fontdict={'size':16})
 pyplot.show()
-# TODO perform molal control calculations (df.apply?) and replot with these settings
+# Controls for molality by dividing each result by concentration
+peak_list = ['ipso', 'meta', 'para', 'ortho', 'solvent peak']
+for peak in peak_list:
+    difference[peak] = difference[peak]/difference['molality']
+# Fixes sign flip due to dividing negative numbers
+difference = difference.apply(lambda x: x*(-1))
+# Select and plot controlled data
+difference = difference.loc[:, ['ipso', 'meta', 'para', 'ortho', 'solvent peak']]
 plot = seaborn.heatmap(difference, annot=True, center=0, cmap='coolwarm_r', robust=True, vmin=-0.04)
 plot.set_title('Change of chemical shift/molal in CDCl$_3$ upon dilution (ppm/molal)', fontdict={'size':16})
 pyplot.xlabel('ppm/molal', fontdict={'size':16})
 pyplot.ylabel('Analyte', fontdict={'size':16})
-pyplot.xlabel('ppm')
 pyplot.show()
 print(difference)

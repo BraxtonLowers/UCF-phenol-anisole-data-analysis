@@ -88,13 +88,13 @@ averaged_dataset = grouped_dataset.mean().reset_index()
 # Open ground truth dataset as a pandas dataframe
 TMSfilename = r'C:\Users\Braxton Lowers\Desktop\Raw spectral data\TMS standardized - uncertainties.csv'
 TMS_referenced_data = pd.read_csv(TMSfilename, header=0)
-# Create output table
-outputTable = pd.DataFrame(
-        columns=['peak', 'best fit line', 'R^2 of corrected data (precision)', 'R^2 of ground truth (accuracy)'])
+outputData = ''
 # Iterates over peaks and analytes and perform linear correction on each
 analyteList = ['phenol', 'anisole', 'thiophenol', 'thioanisole']
 for analyte_to_view in analyteList:
     peakList = ['ipso', 'ortho', 'meta', 'para']
+    outputTable = pd.DataFrame(
+        columns=['peak', 'best fit line', 'R^2 of corrected data (precision)', 'R^2 of ground truth (accuracy)'])
     for peak_to_view in peakList:
         activeDataset = averaged_dataset
         # Handles NaN values by excluding them only if they are in the plot to be viewed
@@ -125,5 +125,9 @@ for analyte_to_view in analyteList:
                                   is_linear=corrections[analyte_to_view]['isLinear'], regression=regression)
         # Appends a row of output r2 results to the output table
         outputTable = pd.concat([outputTable, a_table_row], axis=0)
-    # Save table in a .csv format after each analyte
-    print(outputTable)
+    # Save table in a .csv format after each analyte, titled analyte_to_view
+    outputData = str(analyte_to_view) + '\n' + outputTable.to_csv()
+#write output table data to .csv file
+with open(r'.\tabulatedData.csv', 'w', newline='') as outputFile:
+    outputFile.write(outputData)
+    outputFile.close()

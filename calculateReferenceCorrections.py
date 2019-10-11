@@ -30,8 +30,8 @@ for analyte in analyte_list:
     else:
         isLinear = True
     # Add log factors manually
-    logFactor = None
-    logIntercept = None
+    logFactor = -0.16671387
+    logIntercept = 155.11514
     # Create corrections dictionary
     json_data[analyte] = {'slope':float(linear_regression.coef_[0][0]), 'intercept': float(interceptCorrection),
                           'isLinear': isLinear, 'logFactor': logFactor, 'logIntercept': logIntercept}

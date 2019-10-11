@@ -72,8 +72,6 @@ Creates a plot with corrected datapoints, ground truth datapoints, a best fit li
 
 
 # Loads corrections to reference data
-# TODO uncomment when ready to remove dummy json data
-################################################## commented out for dummy test purposes
 correctionsFile = '.\corrections'
 with open(correctionsFile) as json_data:
     jsonstring = json_data.read()
@@ -125,7 +123,7 @@ for analyte_to_view in analyteList:
         # Appends a row of output r2 results to the output table
         outputTable = pd.concat([outputTable, a_table_row], axis=0)
     # Save table in a .csv format after each analyte, titled analyte_to_view
-    outputData = str(analyte_to_view) + '\n' + outputTable.to_csv()
+    outputData += str(analyte_to_view) + '\n' + outputTable.to_csv()
 #write output table data to .csv file
 with open(r'.\tabulatedData.csv', 'w', newline='') as outputFile:
     outputFile.write(outputData)
